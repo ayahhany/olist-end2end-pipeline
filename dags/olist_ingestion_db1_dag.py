@@ -34,7 +34,7 @@ with DAG(
     default_args=default_args,
     start_date=datetime(2025, 8, 21),
     end_date=datetime(2025, 8, 28),
-    schedule_interval= '* 18 * * *', # Daily at 18:00 UTC (9 pm in cairo )
+    schedule_interval= '05 18 * * *', 
     catchup=True,
     tags=["olist_ayahany", "db1", "incremental"],
 ) as dag:
