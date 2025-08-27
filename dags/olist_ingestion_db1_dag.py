@@ -32,9 +32,9 @@ default_args = {"retries": 1,
 with DAG(
     "olist_incremental_ingestion_db1_dag_ayahany",
     default_args=default_args,
-    start_date=datetime(2025, 8, 22),
+    start_date=datetime(2025, 8, 21),
     end_date=datetime(2025, 8, 28),
-    schedule_interval='@daily',
+    schedule_interval= '0 17 * * *', # Daily at 17:00 UTC (8 pm in cairo )
     catchup=True,
     tags=["olist_ayahany", "db1", "incremental"],
 ) as dag:
