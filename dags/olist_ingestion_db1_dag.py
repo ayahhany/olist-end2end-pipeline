@@ -25,7 +25,7 @@ TIMESTAMP_COLUMN = "updated_at_timestamp"
  
 
 default_args = {"retries": 1, 
-                "retry_delay": timedelta(minutes=5)
+                "retry_delay": timedelta(minutes=2)
             } 
 
 
@@ -34,8 +34,8 @@ with DAG(
     default_args=default_args,
     start_date=datetime(2025, 8, 21),
     end_date=datetime(2025, 8, 28),
-    schedule_interval= '20 9 * * *', 
-    catchup=True,
+    schedule_interval= '35 9 * * *', 
+    catchup=False,
     tags=["ayahany", "db1", "incremental"],
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
