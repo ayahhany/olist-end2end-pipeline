@@ -30,13 +30,13 @@ default_args = {"retries": 1,
 
 
 with DAG(
-    "olist_ingestion_db1_dag_ayahany",
+    "olist_ingestion_db1_dag",
     default_args=default_args,
     start_date=datetime(2025, 8, 21),
     end_date=datetime(2025, 8, 28),
-    schedule_interval= '11 18 * * *', 
+    schedule_interval= '20 9 * * *', 
     catchup=True,
-    tags=["olist_ayahany", "db1", "incremental"],
+    tags=["ayahany", "db1", "incremental"],
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
         export = PostgresToGCSOperator(
