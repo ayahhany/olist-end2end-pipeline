@@ -30,7 +30,7 @@ default_args = {"retries": 1,
 
 
 with DAG(
-    "olist_incremental_ingestion_db1_dag_ayahany",
+    "olist_ingestion_db1_dag_ayahany",
     default_args=default_args,
     start_date=datetime(2025, 8, 21),
     end_date=datetime(2025, 8, 28),
