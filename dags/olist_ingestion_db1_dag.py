@@ -1,9 +1,3 @@
-# ✅ Starts on August 22, 2025
-# ✅ Runs daily and fetches data from the previous day
-# ✅ Exports to GCS with a hierarchical date structure
-# ✅ Loads into a staging table in BigQuery
-# ✅ Merges into a main BigQuery table
-
 from airflow import DAG
 from airflow.providers.google.cloud.transfers.postgres_to_gcs import PostgresToGCSOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
@@ -23,21 +17,21 @@ TABLES_DB1 = {
 }
 TIMESTAMP_COLUMN = "updated_at_timestamp"
  
-
-default_args = {"retries": 1, 
-                "retry_delay": timedelta(minutes=2)
-            } 
+default_args = {
+    "retries": 1,
+    "retry_delay": timedelta(minutes=2)
+}
 
 
 with DAG(
     "olist_db1_ingestion_dag",
     default_args=default_args,
-    start_date=datetime(2025, 8, 21),
+    start_date=datetime(2025, 8, 22),
     end_date=datetime(2025, 8, 28),
-    schedule_interval= None,
-    # schedule_interval= '35 9 * * *', 
-    catchup=False,
+    schedule_interval='@daily',
+    catchup=True,
     tags=["ayahany", "db1", "incremental"],
+
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
         export = PostgresToGCSOperator(
