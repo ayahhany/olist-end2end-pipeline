@@ -48,8 +48,7 @@ with DAG(
                 WHERE {TIMESTAMP_COLUMN} BETWEEN '{{{{ macros.ds_add(ds, -1) }}}}' AND '{{{{ ds }}}}';
             """,
             bucket=GCS_BUCKET,
-            filename=f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json",
-            export_format="json",
+            filename=f"db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json"            export_format="json",
         )
 
         load_staging = GCSToBigQueryOperator(
