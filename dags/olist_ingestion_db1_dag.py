@@ -54,7 +54,7 @@ with DAG(
             task_id=f"{tbl}_load_to_bq_staging",
             bucket=GCS_BUCKET,
             source_objects=[
-                f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
+                f"db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json"
             ],
             destination_project_dataset_table=f"{BIGQUERY_DATASET}.{tbl}_staging_ayahany",
             source_format="NEWLINE_DELIMITED_JSON",
