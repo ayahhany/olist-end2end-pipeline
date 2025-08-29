@@ -1,5 +1,35 @@
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
+def map_postgres_to_bigquery_type(pg_type):
+    mapping = {
+        "integer": "INT64",
+        "bigint": "INT64",
+        "smallint": "INT64",
+        "serial": "INT64",
+        "text": "STRING",
+        "varchar": "STRING",
+        "character varying": "STRING",
+        "boolean": "BOOL",
+        "timestamp without time zone": "TIMESTAMP",
+        "timestamp with time zone": "TIMESTAMP",
+        "date": "DATE",
+        "numeric": "NUMERIC",
+        "double precision": "FLOAT64",
+        "real": "FLOAT64",
+    }
+    return mapping.get(pg_type.lower(), "STRING")  
+
+def generate_create_table_sql(table_name, columns_with_types, dataset):
+    column_defs = ",\n  ".join([
+        f"{col} {map_postgres_to_bigquery_type(dtype)}"
+        for col, dtype in columns_with_types
+    ])
+    return f"""
+        CREATE TABLE IF NOT EXISTS `{dataset}.{table_name}_ayahany` (
+          {column_defs}
+        )
+    """
+
 def get_table_columns_from_postgres(conn_id, table_names):
     """
     Extracts column names for each table from PostgreSQL using Airflow's PostgresHook.
@@ -8,9 +38,9 @@ def get_table_columns_from_postgres(conn_id, table_names):
     schema = {}
     for table in table_names:
         sql = f"""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = '{table}' 
+            SELECT column_name, data_type
+            FROM information_schema.columns
+            WHERE table_name = '{table}'
             ORDER BY ordinal_position;
         """
         result = hook.get_records(sql)
