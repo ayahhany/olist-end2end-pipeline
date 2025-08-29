@@ -4,7 +4,6 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQue
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from datetime import datetime, timedelta
 from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql, generate_create_table_sql
-import logging
 
 # orders_products_db
 POSTGRES_CONN_ID = "postgres_olist_db1_ayahany" 
@@ -37,21 +36,8 @@ with DAG(
 
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
-        columns_with_types = schema[tbl]
-        columns = [col for col, _ in columns_with_types]
-
+        columns = schema[tbl]
         merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
-        create_sql = generate_create_table_sql(tbl, columns_with_types, BIGQUERY_DATASET)
-
-        create_table = BigQueryInsertJobOperator(
-            task_id=f"{tbl}_create_if_missing",
-            configuration={
-                "query": {
-                    "query": create_sql,
-                    "useLegacySql": False,
-                }
-            },
-        )
         
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
@@ -78,6 +64,21 @@ with DAG(
             write_disposition="WRITE_TRUNCATE",
             create_disposition="CREATE_IF_NEEDED",
         )
+        create_landing_if_missing = BigQueryInsertJobOperator(
+            task_id=f"{tbl}_create_if_missing",
+            configuration={
+                "query": {
+                    "query": f"""
+                        CREATE SCHEMA IF NOT EXISTS `{BIGQUERY_DATASET}`;
+                        CREATE TABLE IF NOT EXISTS `{BIGQUERY_DATASET}.{tbl}_ayahany`
+                        AS SELECT * FROM `{BIGQUERY_DATASET}.{tbl}_staging_ayahany`
+                        WHERE 1=0;
+                    """,
+                    "useLegacySql": False,
+                }
+            },
+            location="US", 
+        )
         
         merge = BigQueryInsertJobOperator(
             task_id=f"{tbl}_merge_to_main",
@@ -89,4 +90,4 @@ with DAG(
             },
         )
 
-        create_table >> export >> load_staging >> merge  
+        export >> load_staging >> create_landing_if_missing >> merge  
