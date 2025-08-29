@@ -43,7 +43,8 @@ with DAG(
             postgres_conn_id=POSTGRES_CONN_ID,
             sql=f"""
                 SELECT * FROM {tbl}
-                WHERE {TIMESTAMP_COLUMN} BETWEEN '{{{{ macros.ds_add(ds, -1) }}}}' AND '{{{{ ds }}}}';
+                WHERE {TIMESTAMP_COLUMN} >= '{{ macros.ds_add(ds, -1) }}'
+                AND {TIMESTAMP_COLUMN} < '{{ ds }}'
             """,
             bucket=GCS_BUCKET,
             filename=f"db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json",
