@@ -29,27 +29,19 @@ default_args = {
 with DAG(
     "olist_db1_ingestion_dag_ayahany",
     default_args=default_args,
-    start_date=datetime(2025, 8, 22),
-    end_date=datetime(2025, 8, 28),
+    start_date=datetime(2025, 8, 23),
+    end_date=datetime(2025, 8, 27),
     schedule_interval='@daily',
-    catchup=False,
-    tags=["ayahany", "db1"],
+    catchup=True,
+    tags=["ayahany", "db1_incremental"],
 
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
-        
-        logging.info(f"Processing table: {tbl}")
-
         columns_with_types = schema[tbl]
-        logging.info(f"Schema for {tbl}: {columns_with_types}")
-
         columns = [col for col, _ in columns_with_types]
+
         merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
-        logging.debug(f"Generated MERGE SQL for {tbl}: {merge_sql}")
-
         create_sql = generate_create_table_sql(tbl, columns_with_types, BIGQUERY_DATASET)
-        logging.debug(f"Generated CREATE TABLE SQL for {tbl}: {create_sql}")
-
 
         create_table = BigQueryInsertJobOperator(
             task_id=f"{tbl}_create_if_missing",
@@ -61,8 +53,6 @@ with DAG(
             },
         )
         
-        logging.info("Starting DAG: olist_db1_ingestion_dag_ayah")
-
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
             postgres_conn_id=POSTGRES_CONN_ID,
@@ -76,10 +66,7 @@ with DAG(
             export_format="json",
         )
 
-        logging.info(
-            f"GCS file path for {tbl}: db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
-        )
-
+       
         load_staging = GCSToBigQueryOperator(
             task_id=f"{tbl}_load_to_bq_staging",
             bucket=GCS_BUCKET,
@@ -101,5 +88,5 @@ with DAG(
                 }
             },
         )
-        logging.info("Finished setting up DAG tasks.")
+
         create_table >> export >> load_staging >> merge  
