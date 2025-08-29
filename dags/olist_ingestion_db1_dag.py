@@ -3,7 +3,10 @@ from airflow.providers.google.cloud.transfers.postgres_to_gcs import PostgresToG
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from datetime import datetime, timedelta
-from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql# orders_products_db
+from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql, generate_create_table_sql
+import logging
+
+# orders_products_db
 POSTGRES_CONN_ID = "postgres_olist_db1_ayahany" 
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
@@ -35,8 +38,30 @@ with DAG(
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
         
-        columns = schema[tbl]
+        logging.info(f"Processing table: {tbl}")
+
+        columns_with_types = schema[tbl]
+        logging.info(f"Schema for {tbl}: {columns_with_types}")
+
+        columns = [col for col, _ in columns_with_types]
         merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
+        logging.debug(f"Generated MERGE SQL for {tbl}: {merge_sql}")
+
+        create_sql = generate_create_table_sql(tbl, columns_with_types, BIGQUERY_DATASET)
+        logging.debug(f"Generated CREATE TABLE SQL for {tbl}: {create_sql}")
+
+
+        create_table = BigQueryInsertJobOperator(
+            task_id=f"{tbl}_create_if_missing",
+            configuration={
+                "query": {
+                    "query": create_sql,
+                    "useLegacySql": False,
+                }
+            },
+        )
+        
+        logging.info("Starting DAG: olist_db1_ingestion_dag_ayah")
 
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
@@ -51,6 +76,10 @@ with DAG(
             export_format="json",
         )
 
+        logging.info(
+            f"GCS file path for {tbl}: db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json"
+        )
+
         load_staging = GCSToBigQueryOperator(
             task_id=f"{tbl}_load_to_bq_staging",
             bucket=GCS_BUCKET,
@@ -63,7 +92,6 @@ with DAG(
             create_disposition="CREATE_IF_NEEDED",
         )
         
-
         merge = BigQueryInsertJobOperator(
             task_id=f"{tbl}_merge_to_main",
             configuration={
@@ -73,4 +101,5 @@ with DAG(
                 }
             },
         )
-        export >> load_staging >> merge  
+        logging.info("Finished setting up DAG tasks.")
+        create_table >> export >> load_staging >> merge  
