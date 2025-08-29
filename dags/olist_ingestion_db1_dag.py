@@ -9,10 +9,10 @@ GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
 TABLES_DB1 = {
     "orders": "order_id",
-    "order_items": "order_item_id",
-    "order_reviews": "review_id",
-    "products": "product_id",
-    "product_category_name_translation": "product_category_name"
+    # "order_items": "order_item_id",
+    # "order_reviews": "review_id",
+    # "products": "product_id",
+    # "product_category_name_translation": "product_category_name"
 }
 TIMESTAMP_COLUMN = "updated_at_timestamp"
 
@@ -24,7 +24,7 @@ default_args = {
 
 
 with DAG(
-    "olist_db1_ingestion_dag_ayahany",
+    "olist_db1_ingestion_dag",
     default_args=default_args,
     start_date=datetime(2025, 8, 22),
     end_date=datetime(2025, 8, 28),
