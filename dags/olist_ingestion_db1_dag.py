@@ -27,13 +27,13 @@ default_args = {
 
 
 with DAG(
-    "olist_db1_ingestion_dag_ayahhany",
+    "olist_db1_ingestion_dag_ayahany",
     default_args=default_args,
     start_date=datetime(2025, 8, 22),
     end_date=datetime(2025, 8, 28),
     schedule_interval='@daily',
-    catchup=True,
-    tags=["ayahany", "db1", "incremental"],
+    catchup=False,
+    tags=["ayahany", "db1"],
 
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
@@ -72,19 +72,19 @@ with DAG(
                 AND {TIMESTAMP_COLUMN} < '{{ ds }}'
             """,
             bucket=GCS_BUCKET,
-            filename=f"db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json",
+            filename=f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json",
             export_format="json",
         )
 
         logging.info(
-            f"GCS file path for {tbl}: db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json"
+            f"GCS file path for {tbl}: db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
         )
 
         load_staging = GCSToBigQueryOperator(
             task_id=f"{tbl}_load_to_bq_staging",
             bucket=GCS_BUCKET,
             source_objects=[
-                f"db1_ayahany/{tbl}_ayahany/{{{{ macros.ds_add(ds, -1)[:4] }}}}/{{{{ macros.ds_add(ds, -1)[5:7] }}}}/{{{{ macros.ds_add(ds, -1)[8:] }}}}/data.json"
+                f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
             ],
             destination_project_dataset_table=f"{BIGQUERY_DATASET}.{tbl}_staging_ayahany",
             source_format="NEWLINE_DELIMITED_JSON",
