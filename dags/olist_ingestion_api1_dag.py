@@ -6,6 +6,7 @@ from google.cloud import storage
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.exceptions import AirflowException
 
 GCP_CONN_ID = "google_cloud_default"
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
@@ -18,7 +19,15 @@ def fetch_api_data_and_save():
     api_url = "https://payments-table-834721874829.europe-west1.run.app"
     try:
         response = requests.get(api_url)
+        # Check if the request was successful
         response.raise_for_status() 
+        
+        # Check if the response content is valid JSON before parsing
+        if response.headers.get('content-type') != 'application/json':
+            logging.error(f"API did not return JSON. Content-Type: {response.headers.get('content-type')}")
+            logging.error(f"Raw response content: {response.text}")
+            raise AirflowException("API did not return JSON data.")
+            
         data = response.json()
         file_path = f"/tmp/api1_data.json"
         with open(file_path, 'w') as f:
