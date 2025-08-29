@@ -1,4 +1,6 @@
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+import logging
+
 
 def map_postgres_to_bigquery_type(pg_type):
     mapping = {
@@ -40,11 +42,17 @@ def get_table_columns_from_postgres(conn_id, table_names):
         sql = f"""
             SELECT column_name, data_type
             FROM information_schema.columns
-            WHERE table_name = '{table}'
+            WHERE table_name = '{table}' AND table_schema = 'public'
             ORDER BY ordinal_position;
-        """
-        result = hook.get_records(sql)
-        schema[table] = [row[0] for row in result]
+        """ 
+        try:
+            result = hook.get_records(sql)
+            schema[table] = [(row[0], row[1]) for row in result]
+            logging.info(f"Fetched schema for table {table}: {schema[table]}")
+        except Exception as e:
+            logging.error(f"Failed to fetch schema for table {table}: {e}")
+            schema[table] = []
+
     return schema
 
 def generate_merge_sql(table_name, primary_key, columns, dataset):
