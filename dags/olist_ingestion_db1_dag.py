@@ -3,7 +3,7 @@ from airflow.providers.google.cloud.transfers.postgres_to_gcs import PostgresToG
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from datetime import datetime, timedelta
-from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql, generate_create_table_sql
+from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql
 
 # orders_products_db
 POSTGRES_CONN_ID = "postgres_olist_db1_ayahany" 
