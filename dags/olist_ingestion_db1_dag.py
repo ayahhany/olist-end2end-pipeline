@@ -11,10 +11,10 @@ GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
 TABLES_DB1 = {
     "orders": "order_id",
-    # "order_items": "order_item_id",
-    # "order_reviews": "review_id",
-    # "products": "product_id",
-    # "product_category_name_translation": "product_category_name"
+    "order_items": "order_item_id",
+    "order_reviews": "review_id",
+    "products": "product_id",
+    "product_category_name_translation": "product_category_name"
 }
 TIMESTAMP_COLUMN = "updated_at_timestamp"
 
