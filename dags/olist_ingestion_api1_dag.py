@@ -6,42 +6,33 @@ from google.cloud import storage
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
-from airflow.exceptions import AirflowException
 
 GCP_CONN_ID = "google_cloud_default"
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
 BQ_TABLE = "order_payments_ayahany"
-GCS_FILE_PATH = "api1_ayahany/data.json"
+GCS_FILE_PATH = "api1_ayahany/order_payments.csv" 
 
 
 def fetch_api_data_and_save():
     api_url = "https://payments-table-834721874829.europe-west1.run.app"
     try:
         response = requests.get(api_url)
-        # Check if the request was successful
         response.raise_for_status() 
-        
-        # Check if the response content is valid JSON before parsing
-        if response.headers.get('content-type') != 'application/json':
-            logging.error(f"API did not return JSON. Content-Type: {response.headers.get('content-type')}")
-            logging.error(f"Raw response content: {response.text}")
-            raise AirflowException("API did not return JSON data.")
-            
-        data = response.json()
-        file_path = f"/tmp/api1_data.json"
-        with open(file_path, 'w') as f:
-            json.dump(data, f)
-
-        logging.info(f"Successfully fetched {len(data)} records and saved to {file_path}")
-        
+        csv_content = response.text
+        file_path = "/tmp/order_payments.csv"
+        with open(file_path, "w", newline='') as f:
+            f.write(csv_content)
+        logging.info(f"Successfully fetched CSV and saved to {file_path}")
         return file_path
+
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error fetching data from API: {e}")
+        logging.error(f"Error fetching CSV from API: {e}")
         raise e
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logging.error(f"Unexpected error: {e}")
         raise e
+
 
 def upload_to_gcs(local_file_path):
     storage_client = storage.Client()
@@ -79,7 +70,8 @@ with DAG(
         bucket=GCS_BUCKET,
         source_objects=["{{ task_instance.xcom_pull(task_ids='upload_file_to_gcs') }}"],
         destination_project_dataset_table=f"{BIGQUERY_DATASET}.{BQ_TABLE}",
-        source_format="NEWLINE_DELIMITED_JSON",
+        source_format="CSV",  
+        skip_leading_rows=1,
         write_disposition="WRITE_TRUNCATE",
         create_disposition="CREATE_IF_NEEDED",
         autodetect=True,
