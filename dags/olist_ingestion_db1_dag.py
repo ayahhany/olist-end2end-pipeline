@@ -26,7 +26,7 @@ default_args = {
 
 
 with DAG(
-    "olist_db1_ingestion_dag_ayahany",
+    "olist_db1_incremental_ingestion_dag_ayahany",
     default_args=default_args,
     start_date=datetime(2025, 8, 23),
     end_date=datetime(2025, 8, 27),
