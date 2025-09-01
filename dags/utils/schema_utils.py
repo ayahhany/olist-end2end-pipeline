@@ -39,18 +39,50 @@ def get_table_columns_from_postgres(conn_id, table_names):
     return schema
 
 
-def generate_merge_sql(table_name, primary_key, columns, dataset):
+def generate_merge_sql(table_name, table_config, columns, dataset, timestamp_column="updated_at_timestamp"):
     """
-    Generates a BigQuery MERGE SQL statement using the provided column list.
+    Generates a BigQuery MERGE SQL statement with optional deduplication.
+    
+    Args:
+        table_name (str): Name of the table.
+        table_config (dict): Contains 'primary_keys' (list) and 'deduplicate' (bool).
+        columns (list): List of column names.
+        dataset (str): BigQuery dataset name.
+        timestamp_column (str): Column used for deduplication ordering.
+    
+    Returns:
+        str: A MERGE SQL statement.
     """
+    primary_keys = table_config["primary_keys"]
+    deduplicate = table_config.get("deduplicate", False)
+
+    # Build ON clause
+    on_clause = " AND ".join([f"T.{pk} = S.{pk}" for pk in primary_keys])
+
+    # Build update and insert clauses
     update_clause = ",\n    ".join([f"T.{col} = S.{col}" for col in columns])
     insert_columns = ", ".join(columns)
     insert_values = ", ".join([f"S.{col}" for col in columns])
 
+    # Build source query with optional deduplication
+    if deduplicate:
+        partition_by = ", ".join(primary_keys)
+        source_query = f"""
+            SELECT *
+            FROM (
+                SELECT *,
+                       ROW_NUMBER() OVER (PARTITION BY {partition_by} ORDER BY {timestamp_column} DESC) AS rn
+                FROM `{dataset}.{table_name}_staging_ayahany`
+            )
+            WHERE rn = 1
+        """
+    else:
+        source_query = f"`{dataset}.{table_name}_staging_ayahany`"
+
     return f"""
         MERGE `{dataset}.{table_name}_ayahany` T
-        USING `{dataset}.{table_name}_staging_ayahany` S
-        ON T.{primary_key} = S.{primary_key}
+        USING ({source_query}) S
+        ON {on_clause}
         WHEN MATCHED THEN
           UPDATE SET
             {update_clause}
