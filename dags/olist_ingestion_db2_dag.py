@@ -48,7 +48,7 @@ with DAG(
 ) as dag:
     for tbl, pk in TABLES_DB2.items():
         columns = schema[tbl]
-        merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
+        merge_sql = generate_merge_sql(tbl, TABLES_DB2[tbl], columns, BIGQUERY_DATASET, TIMESTAMP_COLUMN)
         
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
