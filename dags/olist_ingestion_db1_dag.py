@@ -20,7 +20,7 @@ TABLES_DB1 = {
     },
     "order_reviews": {
         "primary_keys": ["review_id"],
-        "deduplicate": False
+        "deduplicate": True
     },
     "products": {
         "primary_keys": ["product_id"],
