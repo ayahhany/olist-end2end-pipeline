@@ -10,10 +10,22 @@ POSTGRES_CONN_ID = "postgres_olist_db2_ayahany"
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
 TABLES_DB2 = {
-    "customers": "customer_id ",
-    "geolocation": "geolocation_zip_code_prefix",
-    "leads_closed": "mql_Id",
-    "leads_qualified": "mql_Id"
+    "customers": {
+        "primary_keys" : ["customer_id"],
+        "deduplicate": False
+    },
+    "geolocation": {
+        "primary_keys" : ["geolocation_zip_code_prefix"],
+        "deduplicate": True
+    },
+    "leads_closed": {
+        "primary_keys" : ["mql_Id"],
+        "deduplicate": False
+    },
+    "leads_qualified": {
+        "primary_keys" : ["mql_Id"],
+        "deduplicate": False
+    }
 }
 TIMESTAMP_COLUMN = "updated_at_timestamp"
 
@@ -36,7 +48,7 @@ with DAG(
 ) as dag:
     for tbl, pk in TABLES_DB2.items():
         columns = schema[tbl]
-        merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
+        merge_sql = generate_merge_sql(tbl, TABLES_DB2[tbl], columns, BIGQUERY_DATASET, TIMESTAMP_COLUMN)
         
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",

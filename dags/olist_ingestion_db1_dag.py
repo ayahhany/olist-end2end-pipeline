@@ -10,12 +10,28 @@ POSTGRES_CONN_ID = "postgres_olist_db1_ayahany"
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
 TABLES_DB1 = {
-    "orders": "order_id",
-    "order_items": "order_item_id",
-    "order_reviews": "review_id",
-    "products": "product_id",
-    "product_category_name_translation": "product_category_name"
+    "orders": {
+        "primary_keys": ["order_id"],
+        "deduplicate": False
+    },
+    "order_items": {
+        "primary_keys": ["order_item_id", "order_id"],
+        "deduplicate": False
+    },
+    "order_reviews": {
+        "primary_keys": ["review_id"],
+        "deduplicate": True
+    },
+    "products": {
+        "primary_keys": ["product_id"],
+        "deduplicate": False
+    },
+    "product_category_name_translation": {
+        "primary_keys": ["product_category_name"],
+        "deduplicate": False
+    }
 }
+
 TIMESTAMP_COLUMN = "updated_at_timestamp"
 
 schema = get_table_columns_from_postgres(POSTGRES_CONN_ID, list(TABLES_DB1.keys()))
@@ -37,7 +53,7 @@ with DAG(
 ) as dag:
     for tbl, pk in TABLES_DB1.items():
         columns = schema[tbl]
-        merge_sql = generate_merge_sql(tbl, pk, columns, BIGQUERY_DATASET)
+        merge_sql = generate_merge_sql(tbl, TABLES_DB1[tbl], columns, BIGQUERY_DATASET, TIMESTAMP_COLUMN)
         
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
