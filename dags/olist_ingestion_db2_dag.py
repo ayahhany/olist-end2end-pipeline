@@ -5,36 +5,31 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 from datetime import datetime, timedelta
 from ayahany.utils.schema_utils import get_table_columns_from_postgres, generate_merge_sql
 
-# orders_products_db
-POSTGRES_CONN_ID = "postgres_olist_db1_ayahany" 
+# customers_db
+POSTGRES_CONN_ID = "postgres_olist_db2_ayahany" 
 GCS_BUCKET = "ready-labs-postgres-to-gcs"
 BIGQUERY_DATASET = "ready-de26.project_landing" 
-TABLES_DB1 = {
-    "orders": {
-        "primary_keys": ["order_id"],
+TABLES_DB2 = {
+    "customers": {
+        "primary_keys" : ["customer_id"],
         "deduplicate": False
     },
-    "order_items": {
-        "primary_keys": ["order_item_id", "order_id"],
-        "deduplicate": False
-    },
-    "order_reviews": {
-        "primary_keys": ["review_id"],
+    "geolocation": {
+        "primary_keys" : ["geolocation_zip_code_prefix"],
         "deduplicate": True
     },
-    "products": {
-        "primary_keys": ["product_id"],
+    "leads_closed": {
+        "primary_keys" : ["mql_Id"],
         "deduplicate": False
     },
-    "product_category_name_translation": {
-        "primary_keys": ["product_category_name"],
+    "leads_qualified": {
+        "primary_keys" : ["mql_Id"],
         "deduplicate": False
     }
 }
-
 TIMESTAMP_COLUMN = "updated_at_timestamp"
 
-schema = get_table_columns_from_postgres(POSTGRES_CONN_ID, list(TABLES_DB1.keys()))
+schema = get_table_columns_from_postgres(POSTGRES_CONN_ID, list(TABLES_DB2.keys()))
 default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=2)
@@ -42,18 +37,18 @@ default_args = {
 
 
 with DAG(
-    "olist_db1_incremental_ingestion_dag_ayahany",
+    "olist_db2_incremental_ingestion_dag_ayahany",
     default_args=default_args,
     start_date=datetime(2025, 8, 23),
     end_date=datetime(2025, 8, 27),
     schedule_interval='@daily',
     catchup=True,
-    tags=["ayahany", "db1_incremental"],
+    tags=["ayahany", "db2_incremental"],
 
 ) as dag:
-    for tbl, pk in TABLES_DB1.items():
+    for tbl, pk in TABLES_DB2.items():
         columns = schema[tbl]
-        merge_sql = generate_merge_sql(tbl, TABLES_DB1[tbl], columns, BIGQUERY_DATASET, TIMESTAMP_COLUMN)
+        merge_sql = generate_merge_sql(tbl, TABLES_DB2[tbl], columns, BIGQUERY_DATASET, TIMESTAMP_COLUMN)
         
         export = PostgresToGCSOperator(
             task_id=f"{tbl}_export_to_gcs",
@@ -64,7 +59,7 @@ with DAG(
                 AND {TIMESTAMP_COLUMN} < '{{{{ ds }}}}'
             """,
             bucket=GCS_BUCKET,
-            filename=f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json",
+            filename=f"db2_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json",
             export_format="json",
         )
 
@@ -73,7 +68,7 @@ with DAG(
             task_id=f"{tbl}_load_to_bq_staging",
             bucket=GCS_BUCKET,
             source_objects=[
-                f"db1_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
+                f"db2_ayahany/{tbl}_ayahany/{{{{ ds[:4] }}}}/{{{{ ds[5:7] }}}}/{{{{ ds[8:] }}}}/data.json"
             ],
             destination_project_dataset_table=f"{BIGQUERY_DATASET}.{tbl}_staging_ayahany",
             source_format="NEWLINE_DELIMITED_JSON",
