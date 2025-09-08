@@ -1,12 +1,19 @@
 {{ config(
     materialized='incremental',
-    incremental_strategy = 'merge',
-    unique_key = 'order_id'
-    ) 
-}}
+    incremental_strategy='merge',
+    unique_key='order_id',
+    partition_by={
+      "field": "order_purchase_date",
+      "data_type": "date"
+    },
+    cluster_by=['customer_id', 'product_id', 'seller_id']
+) }}
 
 with orders as (
     select * from {{ ref('stg_orders_ayahany') }}
+    {% if is_incremental() %}
+    WHERE updated_at_timestamp >= (SELECT MAX(updated_at_timestamp) FROM {{ this }})
+    {% endif %}
 ),
 order_items as (
     select * from {{ ref('stg_order_items_ayahany') }}
