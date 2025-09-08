@@ -9,7 +9,9 @@ SELECT
     cast(product_weight_g as numeric) as product_weight_g, 
     cast(product_length_cm as numeric) as product_length_cm, 
     cast(product_height_cm as numeric) as product_height_cm, 
-    cast(product_width_cm as numeric) as product_width_cm
+    cast(product_width_cm as numeric) as product_width_cm,
+    cast(updated_at_timestamp as timestamp) as updated_at_timestamp 
+
 FROM 
     project_landing.products_ayahany
 

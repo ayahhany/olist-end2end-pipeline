@@ -8,7 +8,9 @@ SELECT
     cast(order_approved_at as timestamp) as order_approved_at, 
     cast(order_delivered_carrier_date as date) as order_delivered_carrier_date, 
     cast(order_delivered_customer_date as date) as order_delivered_customer_date, 
-    cast(order_estimated_delivery_date as date) as order_estimated_delivery_date 
+    cast(order_estimated_delivery_date as date) as order_estimated_delivery_date,
+    cast(updated_at_timestamp as timestamp) as updated_at_timestamp 
+
 FROM 
     project_landing.orders_ayahany
 
