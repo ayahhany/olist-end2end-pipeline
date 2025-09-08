@@ -1,0 +1,213 @@
+version: 2
+
+models:
+  - name: stg_orders_ayahany
+    description: "A cleaned and standardized version of the raw orders table."
+    columns:
+      - name: order_id
+        description: "The unique identifier for an order."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The unique identifier for a customer."
+      - name: order_status
+        description: "The status of the order (e.g., delivered, canceled)."
+      - name: order_purchase_timestamp
+        description: "The timestamp when the order was placed."
+      - name: order_approved_at
+        description: "The timestamp when the order was approved by the seller."
+      - name: order_delivered_carrier_date
+        description: "The timestamp when the order was delivered to the carrier."
+      - name: order_delivered_customer_date
+        description: "The timestamp when the order was delivered to the customer."
+      - name: order_estimated_delivery_date
+        description: "The estimated delivery date for the order."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated. Used for incremental loading."
+
+  - name: stg_order_items_ayahany
+    description: "A standardized view of the raw order items data."
+    columns:
+      - name: order_id
+        description: "The unique identifier for an order."
+        tests:
+          - not_null
+      - name: order_item_id
+        description: "The unique identifier for an item within an order."
+        tests:
+          - not_null
+      - name: product_id
+        description: "The unique identifier for the product sold."
+      - name: seller_id
+        description: "The unique identifier for the seller of the product."
+      - name: shipping_limit_date
+        description: "The date by which the seller must ship the product."
+      - name: price
+        description: "The price of the item."
+      - name: freight_value
+        description: "The freight value of the item."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_order_payments_ayahany
+    description: "A standardized view of the raw order payments data."
+    columns:
+      - name: order_id
+        description: "The unique identifier for an order."
+      - name: payment_sequential
+        description: "A sequence number for multiple payments on a single order."
+      - name: payment_type
+        description: "The type of payment (e.g., credit_card, boleto)."
+      - name: payment_installments
+        description: "The number of installments for the payment."
+      - name: payment_value
+        description: "The value of the payment."
+
+  - name: stg_order_reviews_ayahany
+    description: "A standardized view of the raw order reviews data."
+    columns:
+      - name: review_id
+        description: "The unique identifier for a review."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "The unique identifier for the order that the review belongs to."
+      - name: review_score
+        description: "The score given in the review."
+      - name: review_creation_date
+        description: "The timestamp when the review was created."
+      - name: review_answer_timestamp
+        description: "The timestamp when the review was answered."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_customers_ayahany
+    description: "A standardized view of the raw customers data."
+    columns:
+      - name: customer_id
+        description: "The unique identifier for a customer."
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: "An anonymized customer identifier."
+      - name: customer_zip_code_prefix
+        description: "The zip code prefix of the customer's location."
+      - name: customer_city
+        description: "The city of the customer's location."
+      - name: customer_state
+        description: "The state of the customer's location."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_geolocation_ayahany
+    description: "A standardized view of the raw geolocation data."
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: "The unique zip code prefix for a location."
+        tests:
+          - not_null
+      - name: latitude
+        description: "The geographical latitude of the location."
+      - name: longitude
+        description: "The geographical longitude of the location."
+      - name: city
+        description: "The city of the location."
+      - name: state
+        description: "The state of the location."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_leads_closed_ayahany
+    description: "A standardized view of the raw leads_closed table, representing won leads."
+    columns:
+      - name: mql_id
+        description: "The unique identifier for a marketing qualified lead."
+        tests:
+          - unique
+          - not_null
+      - name: seller_id
+        description: "The unique identifier for a seller."
+      - name: won_date
+        description: "The date when the lead was won, cast to a date type."
+      - name: business_segment
+        description: "The business segment of the lead."
+      - name: declared_monthly_revenue
+        description: "The declared monthly revenue from the lead."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_leads_qualified_ayahany
+    description: "A standardized view of the raw leads_qualified table, representing marketing qualified leads."
+    columns:
+      - name: mql_id
+        description: "The unique identifier for a marketing qualified lead."
+        tests:
+          - unique
+          - not_null
+      - name: first_contact_date
+        description: "The date when the lead was first contacted, cast to a date type."
+      - name: landing_page_id
+        description: "The unique identifier for the landing page that generated the lead."
+      - name: origin
+        description: "The source or origin of the lead."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_products_ayahany
+    description: "A standardized view of the raw products data."
+    columns:
+      - name: product_id
+        description: "The unique identifier for a product."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name
+        description: "The name of the product category in Portuguese."
+      - name: product_name_length
+        description: "The length of the product name."
+      - name: product_description_length
+        description: "The length of the product description."
+      - name: product_photos_qty
+        description: "The number of photos for the product."
+      - name: product_weight_g
+        description: "The weight of the product in grams."
+      - name: product_length_cm
+        description: "The length of the product in centimeters."
+      - name: product_height_cm
+        description: "The height of the product in centimeters."
+      - name: product_width_cm
+        description: "The width of the product in centimeters."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_product_category_name_translation_ayahany
+    description: "A standardized view of the raw product category translation data."
+    columns:
+      - name: product_category_name
+        description: "The name of the product category in Portuguese."
+        tests:
+          - not_null
+      - name: product_category_name_english
+        description: "The name of the product category in English."
+        tests:
+          - not_null
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated."
+
+  - name: stg_sellers_ayahany
+    description: "A standardized view of the raw sellers data."
+    columns:
+      - name: seller_id
+        description: "The unique identifier for a seller."
+        tests:
+          - unique
+          - not_null
+      - name: seller_zip_code_prefix
+        description: "The zip code prefix of the seller's location."
+      - name: seller_city
+        description: "The city where the seller is located."
+      - name: seller_state
+        description: "The state where the seller is located."
