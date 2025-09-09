@@ -1,85 +1,63 @@
 {{ config(
-    materialized='incremental',
-    incremental_strategy='merge',
-    unique_key='order_id',
-    partition_by={
-      "field": "order_purchase_date",
-      "data_type": "date"
-    },
-    cluster_by=['customer_id', 'product_id', 'seller_id']
+    materialized='view'
 ) }}
 
-with orders as (
-    select * from {{ ref('stg_orders_ayahany') }}
-    {% if is_incremental() %}
-    WHERE updated_at_timestamp >= (SELECT MAX(updated_at_timestamp) FROM {{ this }})
-    {% endif %}
+WITH orders AS (
+    SELECT * FROM {{ ref('stg_orders_ayahany') }}
 ),
-order_items as (
-    select * from {{ ref('stg_order_items_ayahany') }}
+
+order_items AS (
+    SELECT * FROM {{ ref('stg_order_items_ayahany') }}
 ),
-payments as (
-    select * from {{ ref('stg_order_payments_ayahany') }}
+
+order_payments AS (
+    SELECT * FROM {{ ref('stg_order_payments_ayahany') }}
 ),
-reviews as (
-    select * from {{ ref('stg_order_reviews_ayahany') }}
+
+order_reviews AS (
+    SELECT * FROM {{ ref('stg_order_reviews_ayahany') }}
 ),
-delivery as (
-    select
-        order_id,
-        date_diff(
-            cast(order_delivered_customer_date as date),
-            cast(order_purchase_timestamp as date),
-            day
-        ) as delivery_days,
-        date_diff(
-            cast(order_estimated_delivery_date as date),
-            cast(order_delivered_customer_date as date),
-            day
-        ) as delay_days,
-        case
-            when order_delivered_customer_date <= order_estimated_delivery_date then 'on_time'
-            else 'delayed'
-        end as delivery_status
-    from {{ ref('stg_orders_ayahany') }}
-    where order_delivered_customer_date is not null
+
+final AS (
+    SELECT
+        o.order_id,
+        o.customer_id,
+        o.order_status,
+        o.order_purchase_timestamp,
+        o.order_approved_at,
+        o.order_delivered_carrier_date,
+        o.order_delivered_customer_date,
+        o.order_estimated_delivery_date,
+        o.updated_at_timestamp,
+        
+        -- Aggregate order item data
+        SUM(oi.price) AS total_item_value,
+        SUM(oi.freight_value) AS total_freight_value,
+        COUNT(oi.order_item_id) AS total_items,
+        COUNT(DISTINCT oi.product_id) AS distinct_products,
+
+        -- Aggregate payment data
+        SUM(op.payment_value) AS total_payment_value,
+        COUNT(op.payment_sequential) AS total_payments,
+        MAX(op.payment_type) AS primary_payment_type,
+
+        -- Aggregate review data
+        AVG(orv.review_score) AS average_review_score
+
+    FROM orders o
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    LEFT JOIN order_payments op ON o.order_id = op.order_id
+    LEFT JOIN order_reviews orv ON o.order_id = orv.order_id
+    GROUP BY
+        o.order_id,
+        o.customer_id,
+        o.order_status,
+        o.order_purchase_timestamp,
+        o.order_approved_at,
+        o.order_delivered_carrier_date,
+        o.order_delivered_customer_date,
+        o.order_estimated_delivery_date,
+        o.updated_at_timestamp
 )
 
-select
-    o.order_id,
-    o.customer_id,
-    o.order_purchase_timestamp,
-    o.order_status,
-
-    -- Aggregated order item metrics
-    sum(oi.price) as total_item_value,
-    sum(oi.freight_value) as total_freight_value,
-    count(oi.order_item_id) as total_items,
-    count(distinct oi.product_id) as distinct_products,
-    count(distinct oi.seller_id) as distinct_sellers,
-
-    -- Payment
-    max(p.payment_type) as primary_payment_type,
-    sum(p.payment_value) as total_payment_value,
-
-    -- Review
-    avg(r.review_score) as avg_review_score,
-
-    -- Delivery
-    d.delivery_days,
-    d.delay_days,
-    d.delivery_status
-
-from orders o
-left join order_items oi using(order_id)
-left join payments p using(order_id)
-left join reviews r using(order_id)
-left join delivery d using(order_id)
-group by
-    o.order_id,
-    o.customer_id,
-    o.order_purchase_timestamp,
-    o.order_status,
-    d.delivery_days,
-    d.delay_days,
-    d.delivery_status
+SELECT * FROM final
