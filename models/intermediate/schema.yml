@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: int_orders_consolidated_ayahany
+    description: "Consolidated orders data with key metrics aggregated from order items, payments, and reviews."
+    columns:
+      - name: order_id
+        description: "The unique identifier for an order."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The unique identifier for a customer."
+      - name: order_status
+        description: "The status of the order (e.g., delivered, canceled)."
+      - name: order_purchase_timestamp
+        description: "The timestamp when the order was placed."
+      - name: total_item_value
+        description: "The total value of all items in the order."
+      - name: total_freight_value
+        description: "The total freight value for the order."
+      - name: total_items
+        description: "The total number of items in the order."
+      - name: total_payment_value
+        description: "The total value of all payments for the order."
+      - name: average_review_score
+        description: "The average review score for the order."
+
+  - name: int_customer_geolocation_ayahany
+    description: "Combines customer data with geolocation information."
+    columns:
+      - name: customer_id
+        description: "The unique identifier for a customer."
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: "The unique anonymized identifier for a customer."
+      - name: customer_zip_code_prefix
+        description: "The zip code prefix of the customer's location."
+      - name: latitude
+        description: "The geographical latitude of the customer."
+      - name: longitude
+        description: "The geographical longitude of the customer."
+
+  - name: int_product_with_translation_ayahany
+    description: "Joins product data with the English translation of product categories."
+    columns:
+      - name: product_id
+        description: "The unique identifier for a product."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name
+        description: "The name of the product category in Portuguese."
+      - name: product_category_name_english
+        description: "The name of the product category in English."
+      - name: product_name_length
+        description: "The length of the product name."
+      - name: product_description_length
+        description: "The length of the product description."
+      - name: product_photos_qty
+        description: "The number of photos for the product."
