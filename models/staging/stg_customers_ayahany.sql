@@ -10,6 +10,4 @@ SELECT
 FROM 
     project_landing.customers_ayahany
 
-
-
  
