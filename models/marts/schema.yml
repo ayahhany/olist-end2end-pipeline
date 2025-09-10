@@ -1,0 +1,101 @@
+version: 2
+
+models:
+  - name: fact_orders_ayahany
+    description: "A fact table containing key metrics and events related to each order."
+    columns:
+      - name: order_id
+        description: "The unique identifier for an order. Serves as the unique key for this table."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The unique identifier for a customer. Used to join with the customers dimension table."
+      - name: customer_unique_id
+        description: "An anonymized identifier for the customer."
+      - name: order_purchase_date
+        description: "The date of the order purchase. Used for partitioning."
+      - name: delivery_days
+        description: "The number of days it took to deliver the order."
+      - name: delivery_status
+        description: "The status of the delivery (e.g., On-time, Late, Not Delivered)."
+      - name: total_item_value
+        description: "The total value of all items in the order."
+      - name: total_freight_value
+        description: "The total freight value for the order."
+      - name: total_payment_value
+        description: "The total value of all payments for the order."
+      - name: average_review_score
+        description: "The average review score for the order."
+      - name: updated_at_timestamp
+        description: "The timestamp of the last update to the order record. Used for incremental loading."
+
+  - name: dim_customers_ayahany
+    description: "A dimension table containing descriptive information about customers."
+    columns:
+      - name: customer_id
+        description: "The unique identifier for a customer."
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: "An anonymized identifier for the customer."
+      - name: customer_city
+        description: "The city where the customer is located."
+      - name: customer_state
+        description: "The state where the customer is located."
+
+  - name: dim_products_ayahany
+    description: "A dimension table containing descriptive information about products."
+    columns:
+      - name: product_id
+        description: "The unique identifier for a product."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: "The English name of the product category."
+      - name: product_weight_g
+        description: "The weight of the product in grams."
+      - name: product_length_cm
+        description: "The length of the product in centimeters."
+      - name: product_height_cm
+        description: "The height of the product in centimeters."
+      - name: product_width_cm
+        description: "The width of the product in centimeters."
+
+  - name: dim_sellers_ayahany
+    description: "A dimension table containing descriptive information about sellers."
+    columns:
+      - name: seller_id
+        description: "The unique identifier for a seller."
+        tests:
+          - unique
+          - not_null
+      - name: seller_zip_code_prefix
+        description: "The zip code prefix of the seller's location."
+      - name: seller_city
+        description: "The city where the seller is located."
+      - name: seller_state
+        description: "The state where the seller is located."
+      - name: latitude
+        description: "The geographical latitude of the seller."
+      - name: longitude
+        description: "The geographical longitude of the seller."
+
+  - name: dim_leads_ayahany
+    description: "A dimension table containing information about marketing qualified leads (MQLs)."
+    columns:
+      - name: mql_id
+        description: "The unique identifier for the marketing qualified lead."
+        tests:
+          - unique
+          - not_null
+      - name: first_contact_date
+        description: "The date when the lead was first contacted."
+      - name: landing_page_id
+        description: "The landing page that generated the lead."
+      - name: origin
+        description: "The source or origin of the lead."
+      - name: won_date
+        description: "The date when the lead was won (if applicable)."
