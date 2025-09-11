@@ -1,19 +1,10 @@
 {{ config(
-    materialized='incremental',
+    materialized='view',
     unique_key='order_id',
-    partition_by={
-        'field': 'order_purchase_date',
-        'data_type': 'date'
-    },
-    cluster_by=['customer_id', 'seller_id']
 ) }}
 
 WITH consolidated_orders AS (
     SELECT * FROM {{ ref('int_orders_consolidated_ayahany') }}
-    {% if is_incremental() %}
-        -- This filter is applied on incremental runs to get only new or updated records
-        WHERE updated_at_timestamp >= (SELECT MAX(updated_at_timestamp) FROM {{ this }})
-    {% endif %}
 ),
 
 orders_and_customers AS (
