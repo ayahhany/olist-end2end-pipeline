@@ -7,7 +7,7 @@ WITH customers AS (
 ),
 
 geolocation AS (
-    SELECT * FROM {{ ref('stg_geolocation_ayahany') }}
+    SELECT * FROM {{ ref('int_geolocation_deduplicated_ayahany') }}
 ),
 
 final AS (
