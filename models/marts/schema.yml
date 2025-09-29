@@ -30,6 +30,50 @@ models:
       - name: updated_at_timestamp
         description: "The timestamp of the last update to the order record. Used for incremental loading."
 
+  - name: fact_order_items_sellers_ayahany
+    description: "A granular fact table linking individual order items to their respective sellers and products."
+    columns:
+      - name: order_id
+        description: "The unique identifier for the order (Part of the composite key)."
+        tests:
+          - not_null
+      - name: order_item_id
+        description: "The unique identifier for the item line within the order (Part of the composite key)."
+        tests:
+          - not_null
+      - name: customer_id
+        description: "Foreign Key to dim_customers_ayahany."
+      - name: customer_unique_id
+        description: "Anonymized customer identifier."
+      - name: seller_id
+        description: "Foreign Key to dim_sellers_ayahany."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Foreign Key to dim_products_ayahany."
+        tests:
+          - not_null
+      - name: order_purchase_date
+        description: "The date the order was placed. Used for partitioning."
+      - name: order_status
+        description: "The status of the parent order (e.g., delivered, canceled)."
+      - name: delivery_days
+        description: "The number of days it took to deliver the item."
+      - name: delivery_status
+        description: "The delivery status for the order (On-time, Late, Not Delivered)."
+      - name: item_price
+        description: "The price of the single item."
+      - name: item_freight_value
+        description: "The freight cost associated with the single item."
+      - name: item_total_revenue
+        description: "Calculated metric: item_price + item_freight_value."
+      - name: quantity_sold
+        description: "Count metric for items sold (always 1 at the item grain)."
+      - name: average_review_score
+        description: "The average review score for the parent order."
+      - name: updated_at_timestamp
+        description: "Timestamp when the record was last updated. Used for incremental loading."
+
   - name: dim_customers_ayahany
     description: "A dimension table containing descriptive information about customers."
     columns:
