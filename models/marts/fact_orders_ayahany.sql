@@ -22,7 +22,6 @@ final AS (
         customer_id,
         customer_unique_id,
         order_status,
-        -- Delivery performance calculations
         DATE_DIFF(DATE(order_delivered_customer_date), DATE(order_purchase_timestamp), DAY) AS delivery_days,
         CASE
             WHEN order_delivered_customer_date IS NOT NULL AND order_estimated_delivery_date IS NOT NULL
@@ -32,21 +31,14 @@ final AS (
             ELSE 'Not Delivered'
         END AS delivery_status,
 
-        -- Timestamps and dates
         DATE(order_purchase_timestamp) AS order_purchase_date,
         order_purchase_timestamp,
-        order_approved_at,
-        order_delivered_carrier_date,
-        order_delivered_customer_date,
-        order_estimated_delivery_date,
 
-        -- Aggregated metrics
         total_item_value,
         total_freight_value,
         total_payment_value,
         total_items,
         distinct_products,
-        total_payments,
         average_review_score,
         updated_at_timestamp
         
