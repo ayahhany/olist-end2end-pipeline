@@ -1,4 +1,4 @@
-# Data Engineering Project - Ready D25 &nbsp; &nbsp; &nbsp;<img align="center" width="50" alt="image" src="https://github.com/Ready-Talent/data-engineering-project-template/assets/70844012/4c10ad15-6b48-4ce3-9829-9e823191b410">
+# Data Engineering Project [ Olist E-commerce ] 
 
 ## Project Description 
 You work in a major consultancy firm, and you have been tasked to lead a new project. The Brazilian e-commerce company “Olist” has hired your consulting firm to produce some insights using its data. You will lead this project which means you have to plan what tools to use, models to build and approach to take.
@@ -15,7 +15,7 @@ You are expected to apply the necessary modeling techniques to transform the raw
 <br>
 
 ### 3- Reporting:
-You are expected to build views in BigQuery from the dimension and fact tables and use them to build a dashboard on Looker Studio that answers at least 6 of the below questions. The questions in bold are mandatory ones. Feel free to answer more questions that are not mentioned below if you want
+You are expected to build views in BigQuery from the dimension and fact tables and use them to build a dashboard on Looker Studio that answers at least 6 of the below questions. Feel free to answer more questions that are not mentioned below if you want
 
 1- Who are the top customers by total order value?  
 2- What is the average number of orders per customer?  
